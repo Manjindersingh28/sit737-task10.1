@@ -93,7 +93,7 @@ Task: 9.1P – Adding a Database
 
 ### 🖥️ Terminal Output
 
-![Terminal Output](./terminal-output.png)
+![Terminal Output](./screenshots/terminal-output.png)
 
 This screenshot shows the successful deployment of both the calculator-api and MongoDB pods in Kubernetes. It also logs the incoming request and response:
 
@@ -105,7 +105,7 @@ Request to add n1=10 and n2=5 was handled properly by the microservice.
 
 ### 🌐 Browser Output
 
-![Browser Output](./browser-output.png)
+![Browser Output](./screenshots/browser-output.png)
 
 This screenshot displays the response from accessing the calculator microservice via browser at http://localhost:30080/add?n1=18&n2=52.
 
