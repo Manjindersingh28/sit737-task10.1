@@ -1,93 +1,101 @@
-## SIT737 Task 9P – Adding a Database
+## SIT737 Task 10.1P – Monitoring and Visibility
 
 ## Introduction:
 
-A basic calculator microservice serves as the demonstration project which was built using Node.js together with MongoDB and it runs on a local Kubernetes cluster that is managed by kubectl. The system uses Node.js with MongoDB connectivity running inside a Kubernetes cluster which operates locally through kubectl commands. The microservice supports basic arithmetic operations (addition and subtraction and multiplication and division) function with the request logger for MongoDB.
+This project demonstrates the deployment of a containerised Node.js calculator API with a MongoDB backend on Google Kubernetes Engine (GKE Autopilot). Monitoring was implemented using available tools like kubectl and partial access to Google Cloud Metrics Explorer.
 
 ## Objective:
 
 The goal was to:
 
-1. Containerize a Node.js calculator app.
-2. Deploy MongoDB as a service in the Kubernetes cluster.
-3. Create a Kubernetes Secret to store the MongoDB URI securely.
-4. Connect the app to MongoDB using the secret.
-5. Expose the calculator API via NodePort.
-6. Verify successful deployment and functionality.
+- Containerise a Node.js app and MongoDB service
+- Push the app image to Docker Hub (as per tutor suggestion)
+- Deploy the app to GKE using Kubernetes manifests
+- Monitor pod resource usage through terminal and GCP (where possible)
+- Apply fallback methods due to GKE Autopilot restrictions
 
 ## Application Overview:
 
-The calculator microservice supports minimalist arithmetic functions which include addition. subtraction, multiplication, and division. It exposes REST endpoints that The microservice accepts numeric input through two parameters which produce JSON output results. The service logs each calculation request and its result to MongoDB for persistence.
+The calculator API exposes a REST endpoint to perform basic arithmetic operations. It connects to a MongoDB instance on startup.
+
+> Example endpoint: `/add?n1=10&n2=5`
+
+The architecture includes:
+
+- Node.js API container
+- MongoDB container with PVC
+- Kubernetes Secrets and Services for internal networking
 
 ## Tools and Technologies:
 
-- **Node.js** – Used to build the backend for the calculator microservice.
-- **MongoDB** – NoSQL database used to store calculation logs.
-- **Docker** – Used to containerize the application.
-- **Docker Hub** – Hosts the container images publicly.
-- **Kubernetes** – Orchestrates and manages the containers.
-- **kubectl** – CLI tool to interact with the Kubernetes cluster.
-- **Docker Desktop** – Provides a local Kubernetes cluster for testing.
+- Node.js
+- MongoDB
+- Docker & DockerHub
+- Kubernetes (GKE Autopilot)
+- kubectl
+- Google Cloud Platform
+- YAML for manifests
 
 ## Deployment Process:
 
-1. **Build and push the Docker image:**
+1. **Built and pushed Docker image to Docker Hub:**
 
 ```bash
-   docker build -t manjindersingh28/calculator-api:latest .
-   docker push manjindersingh28/calculator-api:latest
+docker buildx build --platform linux/amd64,linux/arm64 -t manjindersingh28/calculator-api:v2 . --push
 ```
 
-2. **Apply Kubernetes configuration files:**
+2. **Applied manifests to deploy MongoDB and API:**
 
 ```bash
-kubectl apply -f kubernetes/mongo-pvc.yaml
-kubectl apply -f kubernetes/mongo-deployment.yaml
-kubectl apply -f kubernetes/mongo-service.yaml
-kubectl apply -f kubernetes/mongo-secret.yaml
-kubectl apply -f kubernetes/deployment.yaml
-kubectl apply -f kubernetes/service.yaml
+kubectl apply -f mongo-secret.yaml
+kubectl apply -f mongo-pvc.yaml
+kubectl apply -f mongo-deployment.yaml
+kubectl apply -f mongo-service.yaml
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
 ```
 
-3. **Restart deployment to apply updated secret and environment config:**
+3. **Restarted deployment (if config or env changed):**
 
 ```bash
 kubectl rollout restart deployment calculator-api
 ```
 
-4. **Verify pod status and logs:**
+4. **Verified pod status and logs:**
 
 ```bash
 kubectl get pods
 kubectl logs deployment/calculator-api
 ```
 
-5. **Test the API using a browser:**
+5. **API testing via browser:**
 
-```bash
-http://localhost:30080/add?n1=10&n2=5
+Due to GKE Autopilot’s external IP and NodePort constraints, direct browser access to the API was not possible. However, the app logs confirm the service was listening on port 3040 and connected to MongoDB.
 
-```
+## Monitoring:
 
-## Learning Outcome:
+### What worked:
 
-Understood how to use Kubernetes Secrets to securely inject runtime environment variables.
+- `kubectl top pods` showed real-time CPU and memory usage
+- Logs confirmed MongoDB connectivity and app responsiveness
 
-Learned service discovery in Kubernetes using internal DNS (e.g., mongo-service).
+### What didn’t work fully:
 
-Practiced real-world container orchestration and microservice connectivity.
+- GCP Metrics Explorer did not show container-level metrics due to GKE Autopilot’s default IAM and permission restrictions
 
-Gained hands-on experience with Docker image publishing and Kubernetes deployments.
+> These limitations were acknowledged in tutor announcements and addressed using CLI monitoring as an accepted alternative.
 
 ## Conclusion:
 
-Task 9.1 provided hands-on experience with building cloud-native microservices, managing runtime configurations using secrets, and handling service-to-service communication in Kubernetes. Successfully connecting the app to MongoDB and deploying it via Kubernetes simulated real-world backend infrastructure deployment workflows.
+Despite monitoring limitations on GCP, the project was successfully deployed to a GKE Autopilot cluster using Docker Hub images. Monitoring was achieved through fallback terminal commands. The task met its objectives and demonstrated key concepts in containerisation, cloud deployment, and visibility in production-like environments.
 
 ## Student Details:
 
-Name: Manjinder Singh
-Unit: SIT737 – Cloud Native Application Development
-Task: 9.1P – Adding a Database
+Name: Manjinder Singh  
+Unit: SIT737 – Cloud Native Application Development  
+Task: 10.1P – Monitoring and Visibility
+
+---
 
 ## 📸 Screenshots
 
@@ -95,20 +103,21 @@ Task: 9.1P – Adding a Database
 
 ![Terminal Output](./screenshots/terminal-output.png)
 
-This screenshot shows the successful deployment of both the calculator-api and MongoDB pods in Kubernetes. It also logs the incoming request and response:
+- `kubectl get pods` shows calculator-api and mongo running
+- Logs confirm MongoDB URI was loaded
+- Service listening on port 3040
 
-MONGODB_URI is correctly injected.
+### 📊 kubectl Monitoring
 
-Connection to MongoDB is successful.
+![kubectl top pods](./screenshots/kubectl-top-pods.png)
 
-Request to add n1=10 and n2=5 was handled properly by the microservice.
+- Shows CPU and Memory usage of each pod
+- Used as fallback due to GCP monitoring limitations
 
-### 🌐 Browser Output
+### 📉 GCP Metrics Explorer Attempt
 
-![Browser Output](./screenshots/browser-output.png)
+![GCP Metrics Explorer](./screenshots/metrics-not-showing.png)
 
-This screenshot displays the response from accessing the calculator microservice via browser at http://localhost:30080/add?n1=18&n2=52.
-
-The service successfully processed the request.
-
-The response JSON confirms that the addition result is 70.
+- Metrics Explorer opened and filtered
+- "Kubernetes Container" resource type selected
+- No usable metrics returned due to permission limitations
